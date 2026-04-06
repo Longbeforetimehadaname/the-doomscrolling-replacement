@@ -1,25 +1,50 @@
-# The Side Quests
+# Welcome to your Expo app 👋
 
-I'm tired of doomscrolling and seems like you are too. I wanna create an App that gives you side Quests. Weather you are bored, alone or don't know what to do on your first date. Let the App decide what you should do and have fun
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Get started
 
+1. Install dependencies
 
-## 🚀 About Me
-I'm a young teenager tired of doomscrolling and wasting my time. So I'm making a project for you and me to be less bored and do some real stuf, not just doomscroll.
+   ```bash
+   npm install
+   ```
 
+2. Start the app
 
-## Contributing
+   ```bash
+   npx expo start
+   ```
 
-Contributions are always welcome!
+In the output, you'll find options to open the app in a
 
-Feel fre to fork and try it yourself. There's no one stoping you. 
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-## License
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-[![License: PolyForm NC](https://img.shields.io/badge/License-PolyForm%20NC%201.0-blue)](https://polyformproject.org/licenses/noncommercial/1.0.0/)
+## Get a fresh project
 
+When you're ready, run:
 
+```bash
+npm run reset-project
+```
 
-## Support
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-For support, email finn12qwert@gmail.com
+## Learn more
+
+To learn more about developing your project with Expo, look at the following resources:
+
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+
+## Join the community
+
+Join our community of developers creating universal apps.
+
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
