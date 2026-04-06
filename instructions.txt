@@ -1,0 +1,2 @@
+In the Supabase there are two tables. One named Quests and one named users. In there there are collums title, description, category, difficulty and xp reward. In the second list called users, there are the collums named username, xp, level and completed_quests. 
+Again, I'm using Supabase for this

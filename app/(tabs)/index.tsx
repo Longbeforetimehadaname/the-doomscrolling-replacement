@@ -1,98 +1,174 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { supabase } from "../../lib/supabase";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function Index() {
+  const [quest, setQuest] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [completing, setCompleting] = useState(false);
+  const [session, setSession] = useState<any>(null);
 
-export default function HomeScreen() {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (!session) router.replace("/login");
+      else fetchRandomQuest();
+    });
+  }, []);
+
+  async function fetchRandomQuest() {
+    setLoading(true);
+    const { data, error } = await supabase.from("quests").select("*");
+
+    if (data && data.length > 0) {
+      const random = data[Math.floor(Math.random() * data.length)];
+      setQuest(random);
+    }
+    setLoading(false);
+  }
+
+  async function completeQuest() {
+    if (!quest || !session) return;
+    setCompleting(true);
+
+    // Get current user profile
+    const { data: profile } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profile) {
+      const newXp = profile.xp + quest.xp_reward;
+      const newLevel = Math.floor(newXp / 100) + 1;
+      const newCompleted = profile.completed_quests + 1;
+
+      await supabase
+        .from("users")
+        .update({ xp: newXp, level: newLevel, completed_quests: newCompleted })
+        .eq("id", session.user.id);
+
+      alert(`⚔️ Quest Complete! +${quest.xp_reward} XP`);
+      fetchRandomQuest();
+    } else {
+      // Create profile if it doesn't exist
+      await supabase.from("users").insert({
+        id: session.user.id,
+        username: session.user.email,
+        xp: quest.xp_reward,
+        level: 1,
+        completed_quests: 1,
+      });
+      alert(`⚔️ Quest Complete! +${quest.xp_reward} XP`);
+      fetchRandomQuest();
+    }
+    setCompleting(false);
+  }
+
+  const difficultyColor: any = {
+    easy: "#4caf50",
+    medium: "#ff9800",
+    hard: "#f44336",
+    legendary: "#9c27b0",
+  };
+
+  if (loading)
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator color="#6c47ff" size="large" />
+      </View>
+    );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={styles.container}>
+      <Text style={styles.header}>⚔️ Daily Side Quest</Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      {quest && (
+        <View style={styles.card}>
+          <View
+            style={[
+              styles.badge,
+              { backgroundColor: difficultyColor[quest.difficulty] ?? "#888" },
+            ]}
+          >
+            <Text style={styles.badgeText}>
+              {quest.difficulty?.toUpperCase()}
+            </Text>
+          </View>
+
+          <Text style={styles.questTitle}>{quest.title}</Text>
+          <Text style={styles.questDesc}>{quest.description}</Text>
+
+          <Text style={styles.xp}>+{quest.xp_reward} XP</Text>
+
+          <TouchableOpacity
+            style={styles.completeButton}
+            onPress={completeQuest}
+            disabled={completing}
+          >
+            <Text style={styles.completeText}>
+              {completing ? "Completing..." : "✅ Complete Quest"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={fetchRandomQuest}
+          >
+            <Text style={styles.skipText}>🎲 Reroll Quest</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#0f0f0f",
+    justifyContent: "center",
+    padding: 24,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  header: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 32,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  card: { backgroundColor: "#1a1a1a", borderRadius: 16, padding: 24 },
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginBottom: 16,
   },
+  badgeText: { color: "#fff", fontWeight: "bold", fontSize: 12 },
+  questTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 12,
+  },
+  questDesc: { fontSize: 15, color: "#aaa", marginBottom: 20 },
+  xp: { fontSize: 20, fontWeight: "bold", color: "#6c47ff", marginBottom: 24 },
+  completeButton: {
+    backgroundColor: "#6c47ff",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  completeText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  skipButton: { padding: 12, alignItems: "center" },
+  skipText: { color: "#888", fontSize: 14 },
 });
