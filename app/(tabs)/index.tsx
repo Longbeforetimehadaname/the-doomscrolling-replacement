@@ -38,7 +38,6 @@ export default function Index() {
     if (!quest || !session) return;
     setCompleting(true);
 
-    // Get current user profile
     const { data: profile } = await supabase
       .from("users")
       .select("*")
@@ -46,19 +45,20 @@ export default function Index() {
       .single();
 
     if (profile) {
-      const newXp = profile.xp + quest.xp_reward;
+      const newXp = Number(profile.xp) + Number(quest.xp_reward);
       const newLevel = Math.floor(newXp / 100) + 1;
       const newCompleted = profile.completed_quests + 1;
 
-      await supabase
+      const { error } = await supabase
         .from("users")
         .update({ xp: newXp, level: newLevel, completed_quests: newCompleted })
         .eq("id", session.user.id);
 
+      console.log("Update error:", error);
+
       alert(`⚔️ Quest Complete! +${quest.xp_reward} XP`);
       fetchRandomQuest();
     } else {
-      // Create profile if it doesn't exist
       await supabase.from("users").insert({
         id: session.user.id,
         username: session.user.email,
@@ -88,7 +88,7 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>⚔️ Daily Side Quest</Text>
+      <Text style={styles.header}> Daily Side Quest</Text>
 
       {quest && (
         <View style={styles.card}>
